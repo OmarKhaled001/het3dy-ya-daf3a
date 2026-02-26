@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>هتعدي يا دفعة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030706;
+            --surface: #0a110e;
+            --primary: #10b981;
+            --done-gold: #f59e0b;
+            --text-dim: #94a3b8;
+            --text-bright: #f8fafc;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-bright);
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .wizard-container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--surface);
+            border-radius: 32px;
+            padding: 40px;
+            border: 1px solid rgba(16, 185, 129, 0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            transition: all 0.4s ease;
+        }
+
+        .step { display: none; }
+        .step.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h2 { font-weight: 900; color: var(--primary); margin-top: 0; text-align: center; font-size: 1.8rem; }
+        p { color: var(--text-dim); text-align: center; margin-bottom: 30px; }
+
+        .input-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-dim); }
+        input {
+            width: 100%;
+            padding: 15px;
+            background: #111a16;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 15px;
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary);
+            color: var(--bg);
+            border: none;
+            padding: 16px;
+            border-radius: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            font-family: 'Cairo', sans-serif;
+            font-size: 1.1rem;
+            transition: 0.3s;
+        }
+        .btn-primary:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        /* Dashboard & Progress Styling */
+        .dashboard-view { text-align: center; display: none; }
+        
+        .progress-circle {
+            position: relative;
+            width: 250px;
+            height: 250px;
+            margin: 0 auto 30px;
+        }
+
+        svg { transform: rotate(-90deg); }
+        .bg-ring { fill: none; stroke: rgba(255,255,255,0.03); stroke-width: 12; }
+        .active-ring {
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 12;
+            stroke-linecap: round;
+            stroke-dasharray: 628; /* 2 * PI * 100 */
+            stroke-dashoffset: 628;
+            transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 0 12px var(--primary)); /* التوهج القديم */
+        }
+
+        .pct-text {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+        }
+        #pct-val { 
+            font-size: 4rem; /* فونت كبير زي القديم */
+            font-weight: 900; 
+            color: var(--primary);
+            line-height: 1;
+            letter-spacing: -2px;
+        }
+        .done-label { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; margin-top: 5px; }
+
+        .stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-top: 25px; }
+        .stat-card { background: rgba(255,255,255,0.02); padding: 15px 5px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-label { font-size: 0.75rem; color: var(--text-dim); display: block; }
+        .stat-val { font-size: 1.3rem; font-weight: 900; display: block; margin-top: 5px; }
+
+        .reset-btn { margin-top: 30px; color: var(--text-dim); font-size: 0.8rem; cursor: pointer; display: inline-block; border-bottom: 1px solid transparent; transition: 0.3s; }
+        .reset-btn:hover { color: var(--primary); border-color: var(--primary); }
+    </style>
+</head>
+<body>
+
+<div class="wizard-container" id="wizard">
+    <div class="step active" id="step1">
+        <h2>أهلاً يا بطل</h2>
+        <p>بدأت رحلتك الصعبة امتى؟</p>
+        <div class="input-group">
+            <label>تاريخ البداية</label>
+            <input type="date" id="start-date" value="2025-07-01">
+        </div>
+        <button class="btn-primary" onclick="nextStep(2)">التالي</button>
+    </div>
+
+    <div class="step" id="step2">
+        <h2>هانت خلاص</h2>
+        <p>يوم الحرية المنتظر امتى؟</p>
+        <div class="input-group">
+            <label>تاريخ النهاية</label>
+            <input type="date" id="end-date" value="2026-09-01">
+        </div>
+        <button class="btn-primary" onclick="calculate()">احسب الإنجاز</button>
+    </div>
+
+    <div class="dashboard-view" id="step3">
+        <h2>هتعدي يا دفعة</h2>
+        <div class="progress-circle">
+            <svg width="250" height="250">
+                <circle class="bg-ring" cx="125" cy="125" r="100"></circle>
+                <circle id="ring" class="active-ring" cx="125" cy="125" r="100"></circle>
+            </svg>
+            <div class="pct-text">
+                <span id="pct-val">0%</span>
+                <span class="done-label">تم الإنجاز</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <span class="stat-label">الإجمالي</span>
+                <span class="stat-val" id="v-total">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">المنقضي</span>
+                <span class="stat-val" style="color:var(--done-gold)" id="v-elapsed">0</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">المتبقي</span>
+                <span class="stat-val" style="color:var(--primary)" id="v-rem">0</span>
+            </div>
+        </div>
+
+        <span class="reset-btn" onclick="resetWizard()">إعادة ضبط التواريخ</span>
+    </div>
+</div>
+
+<script>
+    function nextStep(step) {
+        document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+        document.getElementById('step' + step).classList.add('active');
+    }
+
+    function calculate() {
+        const startVal = document.getElementById('start-date').value;
+        const endVal = document.getElementById('end-date').value;
+        
+        const start = new Date(startVal);
+        const end = new Date(endVal);
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        if (end <= start) {
+            alert("تاريخ النهاية لازم يكون بعد البداية!");
+            return;
+        }
+
+        const total = Math.ceil((end - start) / 86400000);
+        const elapsed = Math.floor((today - start) / 86400000);
+        const remaining = Math.ceil((end - today) / 86400000);
+        const percent = Math.min(Math.max((elapsed / total) * 100, 0), 100);
+
+        // Update UI
+        document.getElementById('v-total').innerText = total;
+        document.getElementById('v-elapsed').innerText = elapsed > 0 ? elapsed : 0;
+        document.getElementById('v-rem').innerText = remaining > 0 ? remaining : 0;
+        document.getElementById('pct-val').innerText = Math.floor(percent) + "%";
+
+        // Ring animation (Stroke dasharray is 628 based on 100 radius)
+        const ring = document.getElementById('ring');
+        ring.style.strokeDashoffset = 628 - (628 * percent / 100);
+
+        // Switch View
+        document.getElementById('step2').classList.remove('active');
+        document.getElementById('step3').style.display = 'block';
+        document.querySelector('.wizard-container').style.maxWidth = '600px';
+    }
+
+    function resetWizard() {
+        document.getElementById('step3').style.display = 'none';
+        document.querySelector('.wizard-container').style.maxWidth = '500px';
+        nextStep(1);
+    }
+</script>
+
+</body>
+</html>
